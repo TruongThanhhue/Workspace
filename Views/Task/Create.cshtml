@@ -1,0 +1,80 @@
+﻿@model test.Models.TaskViewModel
+@{
+    ViewData["Title"] = "Tạo nhiệm vụ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var project = (test.Models.Project)ViewBag.Project;
+    var members = (List<test.Models.User>)ViewBag.Members;
+}
+
+<div class="d-flex align-items-center gap-2 mb-4">
+    <a href="/Task/Index?projectId=@project.Id" class="btn btn-sm btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    <h4 class="fw-bold mb-0">✨ Tạo nhiệm vụ mới</h4>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-7">
+        <div class="card border-0 shadow-sm" style="border-radius:14px">
+            <div class="card-body p-4">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="ProjectId" />
+
+                    <div class="mb-3">
+                        <label asp-for="Title" class="form-label fw-semibold">Tên nhiệm vụ</label>
+                        <input asp-for="Title" class="form-control" placeholder="VD: Thiết kế giao diện" />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label fw-semibold">Mô tả</label>
+                        <textarea asp-for="Description" class="form-control" rows="3"
+                                  placeholder="Mô tả chi tiết nhiệm vụ..."></textarea>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label asp-for="Priority" class="form-label fw-semibold">Ưu tiên</label>
+                            <select asp-for="Priority" class="form-select">
+                                <option value="Low">🟢 Thấp</option>
+                                <option value="Medium" selected>🟡 Trung bình</option>
+                                <option value="High">🔴 Cao</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label asp-for="AssignedTo" class="form-label fw-semibold">Giao cho</label>
+                            <select asp-for="AssignedTo" class="form-select">
+                                <option value="">-- Chưa giao --</option>
+                                @foreach (var member in members)
+                                {
+                                    <option value="@member.Id">@member.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <label asp-for="StartDate" class="form-label fw-semibold">Ngày bắt đầu</label>
+                            <input asp-for="StartDate" class="form-control" type="date" />
+                            <span asp-validation-for="StartDate" class="text-danger small"></span>
+                        </div>
+                        <div class="col-6">
+                            <label asp-for="EndDate" class="form-label fw-semibold">Deadline</label>
+                            <input asp-for="EndDate" class="form-control" type="date" />
+                            <span asp-validation-for="EndDate" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-dark px-4">
+                            <i class="fa-solid fa-check me-1"></i> Tạo nhiệm vụ
+                        </button>
+                        <a href="/Task/Index?projectId=@project.Id" class="btn btn-outline-secondary px-4">Hủy</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

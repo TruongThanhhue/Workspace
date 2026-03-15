@@ -1,0 +1,611 @@
+﻿@{
+    ViewData["Title"] = "Timeline";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    bool isManager = ViewBag.IsManager == true;
+    var projects = ViewBag.Projects as List<test.Models.Project> ?? new();
+    int? selectedProjectId = ViewBag.SelectedProjectId;
+}
+
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<style>
+    .timeline-wrap {
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    /* Header */
+    .timeline-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .fc thead th a {
+        color: #fff !important;
+        text-decoration: none !important;
+    }
+    .timeline-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0f172a;
+        letter-spacing: -0.3px;
+    }
+
+        .timeline-title span {
+            color: #64748b;
+            font-weight: 400;
+            font-size: 14px;
+            margin-left: 8px;
+        }
+
+    /* Project select */
+    .project-select {
+        appearance: none;
+        background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 8px 36px 8px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #0f172a;
+        cursor: pointer;
+        min-width: 200px;
+        transition: border-color .2s;
+    }
+
+        .project-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+    /* Legend */
+    .legend-bar {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 16px;
+        padding: 10px 16px;
+        background: #f8fafc;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        font-size: 12px;
+        color: #475569;
+        font-weight: 500;
+    }
+
+    .legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+        display: inline-block;
+        margin-right: 5px;
+    }
+
+    .legend-hint {
+        margin-left: auto;
+        color: #94a3b8;
+        font-size: 11px;
+    }
+
+    /* Calendar wrapper */
+    .calendar-card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    }
+
+    .calendar-inner {
+        padding: 24px;
+    }
+
+    /* FullCalendar overrides */
+    .fc {
+        font-family: 'DM Sans', sans-serif !important;
+    }
+
+        .fc .fc-toolbar {
+            margin-bottom: 20px !important;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .fc .fc-toolbar-title {
+            font-size: 15px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            text-transform: capitalize;
+        }
+
+        .fc .fc-button {
+            background: #fff !important;
+            border: 1.5px solid #e2e8f0 !important;
+            color: #475569 !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            border-radius: 8px !important;
+            padding: 5px 12px !important;
+            box-shadow: none !important;
+            transition: all .15s !important;
+        }
+
+            .fc .fc-button:hover {
+                background: #f8fafc !important;
+                border-color: #cbd5e1 !important;
+                color: #0f172a !important;
+            }
+
+        .fc .fc-today-button {
+            background: #0f172a !important;
+            border-color: #0f172a !important;
+            color: #fff !important;
+        }
+
+            .fc .fc-today-button:hover {
+                background: #1e293b !important;
+                border-color: #1e293b !important;
+            }
+
+        /* Header row */
+        .fc thead th {
+            background: #0f172a !important;
+            border-color: #1e293b !important;
+            padding: 10px 0 !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            color: #fff !important;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Day cells */
+        .fc td {
+            border-color: #f1f5f9 !important;
+        }
+
+        .fc .fc-daygrid-day {
+            min-height: 100px !important;
+        }
+
+        .fc .fc-daygrid-day-number {
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            color: #94a3b8 !important;
+            padding: 6px 10px !important;
+        }
+
+        .fc .fc-daygrid-day:hover {
+            background: #fafafa !important;
+        }
+
+        /* Today */
+        .fc .fc-day-today {
+            background: #fefce8 !important;
+        }
+
+            .fc .fc-day-today .fc-daygrid-day-number {
+                color: #0f172a !important;
+                background: #0f172a;
+                color: #fff !important;
+                border-radius: 6px;
+                padding: 3px 7px !important;
+                font-size: 11px !important;
+            }
+
+    /* Events */
+    .fc-event {
+        border: none !important;
+        border-radius: 5px !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        padding: 2px 8px !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
+        cursor: pointer !important;
+        transition: opacity .15s, transform .1s !important;
+    }
+
+        .fc-event:hover {
+            opacity: 0.9 !important;
+            transform: translateY(-1px) !important;
+        }
+
+    .fc-event-title {
+        font-weight: 600 !important;
+        letter-spacing: -0.1px;
+    }
+
+    /* High priority */
+    .fc-event[style*="dc3545"] {
+        background: #7f1d1d !important;
+        color: #fff !important;
+        border-left: 3px solid #ef4444 !important;
+    }
+    /* Medium */
+    .fc-event[style*="fd7e14"] {
+        background: #78350f !important;
+        color: #fff !important;
+        border-left: 3px solid #f59e0b !important;
+    }
+    /* Low */
+    .fc-event[style*="0d6efd"] {
+        background: #1e3a5f !important;
+        color: #fff !important;
+        border-left: 3px solid #3b82f6 !important;
+    }
+
+    .fc-more-link {
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        color: #64748b !important;
+        padding: 1px 6px !important;
+    }
+
+    /* Resize handle */
+    .fc-event .fc-event-resizer {
+        opacity: 0;
+        transition: opacity .2s;
+    }
+
+    .fc-event:hover .fc-event-resizer {
+        opacity: 1;
+    }
+
+    /* Modal */
+    .task-modal .modal-content {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    .task-modal .modal-header {
+        padding: 20px 24px 0;
+        border: none;
+    }
+
+    .task-modal .modal-body {
+        padding: 16px 24px;
+    }
+
+    .task-modal .modal-footer {
+        padding: 0 24px 20px;
+        border: none;
+    }
+
+    .task-modal .modal-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 13px;
+    }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+    .info-label {
+        color: #94a3b8;
+        font-weight: 500;
+    }
+
+    .info-value {
+        font-weight: 600;
+        color: #0f172a;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    /* Toast */
+    .update-toast {
+        background: #0f172a;
+        color: #fff;
+        border-radius: 10px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        border: none;
+        min-width: 260px;
+    }
+
+        .update-toast.success {
+            background: #065f46;
+        }
+
+        .update-toast.error {
+            background: #7f1d1d;
+        }
+</style>
+
+<div class="timeline-wrap">
+    <!-- Header -->
+    <div class="timeline-header">
+        <div class="timeline-title">
+            Timeline
+            <span>Quản lý tiến độ dự án</span>
+        </div>
+        @if (projects.Any())
+        {
+            <select id="projectSelect" class="project-select">
+                <option value="">Chọn dự án...</option>
+                @foreach (var p in projects)
+                {
+                    <option value="@p.Id" selected="@(selectedProjectId == p.Id)">@p.Name</option>
+                }
+            </select>
+        }
+    </div>
+
+    @if (!projects.Any())
+    {
+        <div class="calendar-card">
+            <div class="calendar-inner text-center py-5 text-muted">
+                <i class="fa-solid fa-calendar-xmark fa-2x mb-3 d-block opacity-25"></i>
+                <div style="font-size:14px">Bạn chưa có dự án nào</div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Legend -->
+        <div class="legend-bar">
+            <span><span class="legend-dot" style="background:#dc2626"></span>Ưu tiên cao</span>
+            <span><span class="legend-dot" style="background:#f59e0b"></span>Trung bình</span>
+            <span><span class="legend-dot" style="background:#3b82f6"></span>Thấp</span>
+            @if (isManager)
+            {
+                <span class="legend-hint">
+                    <i class="fa-solid fa-circle-info me-1"></i>
+                    Kéo task để di chuyển · Kéo 2 đầu để thay đổi thời hạn
+                </span>
+            }
+        </div>
+
+        <!-- Calendar -->
+        <div class="calendar-card">
+            <div class="calendar-inner">
+                <div id="calendar"></div>
+            </div>
+        </div>
+
+        <!-- Toast -->
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999">
+            <div id="updateToast" class="toast update-toast" role="alert">
+                <div class="d-flex align-items-center px-3 py-2">
+                    <span id="toastMsg" class="flex-grow-1"></span>
+                    <button type="button" class="btn-close btn-close-white ms-3" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Modal -->
+        <div class="modal fade task-modal" id="taskModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered" style="max-width:400px">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <div>
+                            <div class="modal-title" id="modalTitle"></div>
+                            <div class="text-muted mt-1" style="font-size:12px" id="modalProject"></div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="info-row">
+                            <span class="info-label">Người thực hiện</span>
+                            <span class="info-value" id="modalAssigned"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Trạng thái</span>
+                            <span id="modalStatus"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Ưu tiên</span>
+                            <span id="modalPriority"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Bắt đầu</span>
+                            <input type="date" id="modalStartInput" class="form-control form-control-sm" style="width:160px;border-radius:8px;border:1.5px solid #e2e8f0;font-size:13px" />
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Hạn chót</span>
+                            <input type="date" id="modalEndInput" class="form-control form-control-sm" style="width:160px;border-radius:8px;border:1.5px solid #e2e8f0;font-size:13px" />
+                        </div>
+                        <div class="mt-3">
+                            <button id="modalUpdateBtn" class="btn btn-sm w-100 fw-600"
+                                    style="background:#0f172a;color:#fff;border:none;border-radius:8px;padding:8px;font-size:13px;font-weight:600">
+                                Cập nhật thời gian
+                            </button>
+                        </div>
+                        <div id="modalDescRow" style="display:none;margin-top:12px">
+                            <div class="info-label mb-2">Mô tả</div>
+                            <div id="modalDesc" style="background:#f8fafc;padding:10px 12px;border-radius:8px;font-size:13px;color:#475569;line-height:1.5"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm" style="background:#f1f5f9;border:none;border-radius:8px;padding:7px 16px;font-weight:600;color:#475569;font-size:13px" data-bs-dismiss="modal">Đóng</button>
+                        <a id="modalLink" href="#" class="btn btn-sm" style="background:#0f172a;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-weight:600;font-size:13px">
+                            Xem chi tiết →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
+@section Scripts {
+    <script>
+        // @@ts-nocheck
+        let calendar;
+        const isManager = @(isManager ? "true" : "false");
+
+        function showToast(msg, success) {
+            const toast = document.getElementById('updateToast');
+            const toastMsg = document.getElementById('toastMsg');
+            toastMsg.textContent = msg;
+            toast.className = 'toast update-toast ' + (success ? 'success' : 'error');
+            new bootstrap.Toast(toast, { delay: 3000 }).show();
+        }
+
+        function loadCalendar(projectId) {
+            const calendarEl = document.getElementById('calendar');
+            if (!calendarEl) return;
+            if (calendar) calendar.destroy();
+
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'vi',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: ''
+                },
+                height: 680,
+                editable: isManager,
+                droppable: isManager,
+                eventResizableFromStart: isManager,
+                displayEventTime: false,
+                dayMaxEvents: 4,
+                eventDisplay: 'block',
+                events: `/Timeline/GetTasks?projectId=${projectId}`,
+
+                eventClick(info) {
+                    const p = info.event.extendedProps;
+                    document.getElementById('modalTitle').textContent = info.event.title;
+                    document.getElementById('modalAssigned').textContent = p.assignedUser;
+                    document.getElementById('modalStartInput').value = p.startRaw;
+                    document.getElementById('modalEndInput').value = p.endRaw;
+                    window.currentEventId = info.event.id;
+                    const statusMap = {
+                        'Done': '<span class="status-badge" style="background:#d1fae5;color:#065f46">✓ Hoàn thành</span>',
+                        'Overdue': '<span class="status-badge" style="background:#fee2e2;color:#b91c1c">! Quá hạn</span>',
+                        'Pending': '<span class="status-badge" style="background:#f1f5f9;color:#475569">· Chờ xử lý</span>',
+                        'InProgress': '<span class="status-badge" style="background:#dbeafe;color:#1d4ed8">↻ Đang làm</span>'
+                    };
+                    document.getElementById('modalStatus').innerHTML = statusMap[p.status] || p.status;
+
+                    const priorityMap = {
+                        'High': '<span class="status-badge" style="background:#7f1d1d;color:#fff">Cao</span>',
+                        'Medium': '<span class="status-badge" style="background:#78350f;color:#fff">Trung bình</span>',
+                        'Low': '<span class="status-badge" style="background:#1e3a5f;color:#fff">Thấp</span>'
+        };
+                    document.getElementById('modalPriority').innerHTML = priorityMap[p.priority] || p.priority;
+
+                    const descRow = document.getElementById('modalDescRow');
+                    if (p.description) {
+                        document.getElementById('modalDesc').textContent = p.description;
+                        descRow.style.display = '';
+                    } else {
+                        descRow.style.display = 'none';
+                    }
+
+                    document.getElementById('modalLink').href = `/Task/Details/${info.event.id}`;
+                    new bootstrap.Modal(document.getElementById('taskModal')).show();
+                },
+
+                eventDrop(info) {
+                    const start = info.event.start;
+                    const end = info.event.end || new Date(start.getTime() + 86400000);
+                    updateTask(info.event.id, start, end, info);
+                },
+
+                eventResize(info) {
+                    const start = info.event.start;
+                    const end = info.event.end || new Date(start.getTime() + 86400000);
+                    updateTask(info.event.id, start, end, info);
+                }
+            });
+
+            calendar.render();
+        }
+
+        function updateTask(id, start, end, info) {
+            fetch('/Timeline/UpdateTask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: parseInt(id),
+                    start: start.toISOString(),
+                    end: end.toISOString()
+                })
+            })
+            .then(res => {
+                if (res.ok) {
+                    res.json().then(data => {
+                        showToast(`Đã cập nhật: ${data.startDisplay} → ${data.endDisplay}`, true);
+                    });
+                } else {
+                    info.revert();
+                    showToast('Cập nhật thất bại', false);
+                }
+            })
+            .catch(() => {
+                info.revert();
+                showToast('Lỗi kết nối', false);
+            });
+        }
+                document.getElementById('modalUpdateBtn').addEventListener('click', function() {
+            const startVal = document.getElementById('modalStartInput').value;
+            const endVal = document.getElementById('modalEndInput').value;
+            if (!startVal || !endVal) return;
+
+            const start = new Date(startVal);
+            const end = new Date(endVal);
+            end.setDate(end.getDate() + 1); // FullCalendar exclusive end
+
+            fetch('/Timeline/UpdateTask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: parseInt(window.currentEventId),
+                    start: start.toISOString(),
+                    end: end.toISOString()
+                })
+            })
+            .then(res => {
+                if (res.ok) {
+                    res.json().then(data => {
+                        bootstrap.Modal.getInstance(document.getElementById('taskModal')).hide();
+                        showToast(`Đã cập nhật: ${data.startDisplay} → ${data.endDisplay}`, true);
+                        calendar.refetchEvents();
+                    });
+                } else {
+                    showToast('Cập nhật thất bại', false);
+                }
+            })
+            .catch(() => showToast('Lỗi kết nối', false));
+        });
+        const projectSelect = document.getElementById('projectSelect');
+        if (projectSelect) {
+            projectSelect.addEventListener('change', function () {
+                if (this.value) loadCalendar(this.value);
+            });
+            if (projectSelect.value) {
+                loadCalendar(projectSelect.value);
+            } else if (projectSelect.options.length === 2) {
+                projectSelect.selectedIndex = 1;
+                loadCalendar(projectSelect.value);
+            }
+        }
+    </script>
+}

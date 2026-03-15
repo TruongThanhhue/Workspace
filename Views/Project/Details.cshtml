@@ -1,0 +1,523 @@
+﻿@model test.Models.Project
+@{
+    ViewData["Title"] = Model.Name;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    bool isManagerOfProject = ViewBag.IsManager == true;
+    var pendingInvites = ViewBag.PendingInvites as List<test.Models.ProjectInvite> ?? new();
+    var total = Model.Tasks?.Count ?? 0;
+    var done = Model.Tasks?.Count(t => t.Status == "Done") ?? 0;
+    var progress = total > 0 ? (int)((double)done / total * 100) : 0;
+}
+
+<style>
+    .det-wrap {
+        font-family: 'DM Sans', 'Segoe UI', sans-serif;
+    }
+
+    .det-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .det-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0f172a;
+        letter-spacing: -0.3px;
+    }
+
+    .det-sub {
+        font-size: 13px;
+        color: #94a3b8;
+        margin-top: 4px;
+    }
+
+    .det-grid {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 20px;
+    }
+
+    @@media(max-width:900px) {
+        .det-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .det-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 20px;
+        margin-bottom: 16px;
+    }
+
+    .det-card-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    /* Info rows */
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #f8fafc;
+        font-size: 13px;
+    }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+    .info-lbl {
+        color: #94a3b8;
+        font-weight: 500;
+    }
+
+    .info-val {
+        font-weight: 600;
+        color: #0f172a;
+    }
+
+    /* Progress */
+    .prog-track {
+        height: 6px;
+        background: #f1f5f9;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 8px 0 4px;
+    }
+
+    .prog-fill {
+        height: 100%;
+        border-radius: 10px;
+        background: #0f172a;
+    }
+
+        .prog-fill.green {
+            background: #22c55e;
+        }
+
+    /* Members */
+    .member-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #f8fafc;
+        font-size: 13px;
+    }
+
+        .member-row:last-child {
+            border-bottom: none;
+        }
+
+    .member-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: #0f172a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        flex-shrink: 0;
+        margin-right: 10px;
+    }
+
+    .member-name {
+        font-weight: 600;
+        color: #0f172a;
+    }
+
+    .member-role {
+        font-size: 11px;
+        color: #94a3b8;
+    }
+
+    /* Tasks */
+    .task-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 0;
+        border-bottom: 1px solid #f8fafc;
+        font-size: 13px;
+        text-decoration: none;
+        color: inherit;
+        transition: background .1s;
+    }
+
+        .task-row:last-child {
+            border-bottom: none;
+        }
+
+        .task-row:hover {
+            color: #0f172a;
+        }
+
+    .task-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .task-name {
+        font-weight: 600;
+        flex: 1;
+        color: #0f172a;
+    }
+
+    .task-user {
+        font-size: 11px;
+        color: #94a3b8;
+    }
+
+    .task-badge {
+        font-size: 10px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 20px;
+    }
+
+    /* Invite section */
+    .invite-search {
+        position: relative;
+        margin-bottom: 12px;
+    }
+
+    .invite-input {
+        width: 100%;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 9px;
+        padding: 8px 12px;
+        font-size: 13px;
+        font-family: inherit;
+        outline: none;
+        transition: border-color .15s;
+        box-sizing: border-box;
+    }
+
+        .invite-input:focus {
+            border-color: #0f172a;
+        }
+
+    .invite-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        z-index: 100;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        overflow: hidden;
+        display: none;
+    }
+
+    .invite-result-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        cursor: pointer;
+        transition: background .1s;
+        font-size: 13px;
+    }
+
+        .invite-result-item:hover {
+            background: #f8fafc;
+        }
+
+    .invite-result-name {
+        font-weight: 600;
+        color: #0f172a;
+    }
+
+    .invite-result-email {
+        font-size: 11px;
+        color: #94a3b8;
+    }
+
+    .btn-invite-send {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 7px;
+        background: #0f172a;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        font-family: inherit;
+    }
+
+        .btn-invite-send:hover {
+            background: #1e293b;
+        }
+
+    .pending-invite-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #f8fafc;
+        font-size: 12px;
+    }
+
+        .pending-invite-row:last-child {
+            border-bottom: none;
+        }
+
+    /* Buttons */
+    .det-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 7px 14px;
+        border-radius: 8px;
+        border: 1.5px solid #e2e8f0;
+        background: #fff;
+        color: #475569;
+        text-decoration: none;
+        transition: all .15s;
+        cursor: pointer;
+        font-family: inherit;
+    }
+
+        .det-btn:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: #0f172a;
+        }
+
+        .det-btn.primary {
+            background: #0f172a;
+            color: #fff;
+            border-color: #0f172a;
+        }
+
+            .det-btn.primary:hover {
+                background: #1e293b;
+            }
+
+        .det-btn.danger:hover {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #dc2626;
+        }
+</style>
+
+<div class="det-wrap">
+    <!-- Header -->
+    <div class="det-header">
+        <div>
+            <div class="det-title">@Model.Name</div>
+            <div class="det-sub">@(Model.Description ?? "Không có mô tả")</div>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            @if (isManagerOfProject)
+            {
+                <a href="/Task/Create?projectId=@Model.Id" class="det-btn primary">
+                    <i class="fa-solid fa-plus" style="font-size:10px"></i> Thêm nhiệm vụ
+                </a>
+                <a href="/Project/Edit/@Model.Id" class="det-btn">
+                    <i class="fa-solid fa-pen"></i> Chỉnh sửa
+                </a>
+            }
+            <a href="/Project/Index" class="det-btn">
+                <i class="fa-solid fa-arrow-left"></i> Quay lại
+            </a>
+        </div>
+    </div>
+
+    <div class="det-grid">
+        <!-- Left: Tasks -->
+        <div>
+            <div class="det-card">
+                <div class="det-card-title">
+                    <i class="fa-solid fa-list-check me-1"></i> Nhiệm vụ (@total)
+                </div>
+                @if (!Model.Tasks.Any())
+                {
+                    <div style="text-align:center;padding:24px;color:#94a3b8;font-size:13px">
+                        <i class="fa-regular fa-clipboard d-block mb-2" style="font-size:24px;opacity:.3"></i>
+                        Chưa có nhiệm vụ nào
+                    </div>
+                }
+                else
+                {
+                    @foreach (var task in Model.Tasks.OrderByDescending(t => t.CreatedAt))
+                    {
+                        var dotColor = task.Status switch { "Done" => "#22c55e", "Overdue" => "#ef4444", "InProgress" => "#3b82f6", _ => "#cbd5e1" };
+                        var badgeBg = task.Status switch { "Done" => "#f0fdf4", "Overdue" => "#fef2f2", _ => "#f8fafc" };
+                        var badgeColor = task.Status switch { "Done" => "#16a34a", "Overdue" => "#dc2626", _ => "#94a3b8" };
+                        var badgeLabel = task.Status switch { "Done" => "Hoàn thành", "Overdue" => "Quá hạn", "InProgress" => "Đang làm", _ => "Chờ" };
+                        <a href="/Task/Details/@task.Id" class="task-row">
+                            <div class="task-dot" style="background:@dotColor"></div>
+                            <div class="flex-grow-1">
+                                <div class="task-name">@task.Title</div>
+                                <div class="task-user">@(task.AssignedUser?.Name ?? "Chưa giao") · Hạn: @task.EndDate.ToString("dd/MM/yyyy")</div>
+                            </div>
+                            <span class="task-badge" style="background:@badgeBg;color:@badgeColor">@badgeLabel</span>
+                        </a>
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- Right: Info + Members + Invite -->
+        <div>
+            <!-- Thông tin dự án -->
+            <div class="det-card">
+                <div class="det-card-title"><i class="fa-solid fa-circle-info me-1"></i> Thông tin</div>
+                <div class="info-row">
+                    <span class="info-lbl">Manager</span>
+                    <span class="info-val">@(Model.Manager?.Name ?? "N/A")</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-lbl">Bắt đầu</span>
+                    <span class="info-val">@Model.StartDate.ToString("dd/MM/yyyy")</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-lbl">Hạn chót</span>
+                    <span class="info-val" style="color:@(Model.EndDate < DateTime.Today ? "#dc2626" : "#0f172a")">
+                        @Model.EndDate.ToString("dd/MM/yyyy")
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-lbl">Tiến độ</span>
+                    <span class="info-val">@done / @total task</span>
+                </div>
+                <div class="prog-track">
+                    <div class="prog-fill @(progress == 100 ? "green" : "")" style="width:@progress%"></div>
+                </div>
+                <div style="font-size:11px;color:#94a3b8;text-align:right">@progress% hoàn thành</div>
+            </div>
+
+            <!-- Thành viên -->
+            <div class="det-card">
+                <div class="det-card-title"><i class="fa-solid fa-users me-1"></i> Thành viên (@Model.Members.Count)</div>
+
+                @if (!Model.Members.Any())
+                {
+                    <div style="font-size:13px;color:#94a3b8;text-align:center;padding:12px">Chưa có thành viên</div>
+                }
+                else
+                {
+                    @foreach (var m in Model.Members)
+                    {
+                        <div class="member-row">
+                            <div class="d-flex align-items-center">
+                                <div class="member-avatar">@(m.User?.Name?.Substring(0, 1).ToUpper() ?? "?")</div>
+                                <div>
+                                    <div class="member-name">@m.User?.Name</div>
+                                    <div class="member-role">@m.User?.Email</div>
+                                </div>
+                            </div>
+                            @if (isManagerOfProject)
+                            {
+                                <form asp-controller="Project" asp-action="RemoveMember" method="post" style="margin:0">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="projectId" value="@Model.Id" />
+                                    <input type="hidden" name="userId" value="@m.UserId" />
+                                    <button type="submit" class="det-btn danger" style="padding:4px 8px;font-size:11px"
+                                            onclick="return confirm('Xóa thành viên này?')">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+
+            <!-- Mời thành viên (chỉ manager) -->
+            @if (isManagerOfProject)
+            {
+                <div class="det-card">
+                    <div class="det-card-title"><i class="fa-solid fa-user-plus me-1"></i> Mời thành viên</div>
+
+                    <div class="invite-search">
+                        <input type="text" id="inviteEmail" class="invite-input"
+                               placeholder="Nhập email để tìm..." autocomplete="off" />
+                        <div id="inviteResults" class="invite-results"></div>
+                    </div>
+
+                    @if (pendingInvites.Any())
+                    {
+                        <div style="font-size:11px;color:#94a3b8;font-weight:600;margin-bottom:8px">Đang chờ phản hồi</div>
+                        @foreach (var inv in pendingInvites)
+                        {
+                            <div class="pending-invite-row">
+                                <div>
+                                    <div style="font-weight:600;color:#0f172a;font-size:12px">@inv.InvitedUser?.Name</div>
+                                    <div style="font-size:11px;color:#94a3b8">@inv.InvitedUser?.Email</div>
+                                </div>
+                                <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;background:#fffbeb;color:#b45309">Chờ</span>
+                            </div>
+                        }
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@if (isManagerOfProject)
+{
+    <script>
+        const projectId = @Model.Id;
+        let searchTimeout;
+
+        document.getElementById('inviteEmail').addEventListener('input', function () {
+            clearTimeout(searchTimeout);
+            const val = this.value.trim();
+            const results = document.getElementById('inviteResults');
+            if (val.length < 2) { results.style.display = 'none'; return; }
+
+            searchTimeout = setTimeout(async () => {
+                const res = await fetch(`/Invite/SearchUser?email=${encodeURIComponent(val)}&projectId=${projectId}`);
+                const users = await res.json();
+                if (!users.length) { results.style.display = 'none'; return; }
+
+                results.innerHTML = users.map(u => `
+                    <div class="invite-result-item">
+                        <div>
+                            <div class="invite-result-name">${u.name}</div>
+                            <div class="invite-result-email">${u.email}</div>
+                        </div>
+                        <form method="post" action="/Invite/Send">
+                            <input type="hidden" name="__RequestVerificationToken" value="${document.querySelector('input[name=__RequestVerificationToken]')?.value ?? ''}" />
+                            <input type="hidden" name="projectId" value="${projectId}" />
+                            <input type="hidden" name="userId" value="${u.id}" />
+                            <button type="submit" class="btn-invite-send">Mời</button>
+                        </form>
+                    </div>
+                `).join('');
+                results.style.display = 'block';
+            }, 300);
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.invite-search'))
+                document.getElementById('inviteResults').style.display = 'none';
+        });
+    </script>
+    @Html.AntiForgeryToken()
+}

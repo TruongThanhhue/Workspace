@@ -1,0 +1,167 @@
+﻿@model test.Models.ProjectInvite
+@{
+    ViewData["Title"] = "Lời mời tham gia dự án";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .invite-wrap {
+        font-family: 'DM Sans', 'Segoe UI', sans-serif;
+        max-width: 500px;
+        margin: 40px auto;
+    }
+
+    .invite-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 32px;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+
+    .invite-icon {
+        width: 56px;
+        height: 56px;
+        background: #eff6ff;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+        font-size: 24px;
+    }
+
+    .invite-title {
+        font-size: 17px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 8px;
+    }
+
+    .invite-sub {
+        font-size: 13px;
+        color: #64748b;
+        line-height: 1.6;
+        margin-bottom: 24px;
+    }
+
+    .invite-project {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-bottom: 24px;
+        text-align: left;
+    }
+
+    .invite-project-name {
+        font-size: 15px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .invite-project-by {
+        font-size: 12px;
+        color: #94a3b8;
+        margin-top: 4px;
+    }
+
+    .invite-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-accept {
+        flex: 1;
+        background: #0f172a;
+        color: #fff;
+        border: none;
+        border-radius: 9px;
+        padding: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background .15s;
+    }
+
+        .btn-accept:hover {
+            background: #1e293b;
+        }
+
+    .btn-decline {
+        flex: 1;
+        background: #fff;
+        color: #475569;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 9px;
+        padding: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all .15s;
+    }
+
+        .btn-decline:hover {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #dc2626;
+        }
+</style>
+
+<div class="invite-wrap">
+    @if (Model.Status != "Pending")
+    {
+        <div class="invite-card">
+            <div class="invite-icon">
+                @if (Model.Status == "Accepted")
+                {
+                    <span>✅</span>
+                }
+                else
+                {
+
+                    <span>❌</span>
+                }
+            </div>
+            <div class="invite-title">
+                @(Model.Status == "Accepted" ? "Đã chấp nhận lời mời" : "Đã từ chối lời mời")
+            </div>
+            <div class="invite-sub">Lời mời này đã được xử lý.</div>
+            <a href="/Home/Index" class="btn-accept" style="display:block;text-decoration:none;text-align:center">
+                Về trang chủ
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="invite-card">
+            <div class="invite-icon">📩</div>
+            <div class="invite-title">Bạn nhận được lời mời!</div>
+            <div class="invite-sub">
+                Bạn được mời tham gia vào dự án bên dưới. Chấp nhận để bắt đầu cộng tác.
+            </div>
+
+            <div class="invite-project">
+                <div class="invite-project-name">@Model.Project?.Name</div>
+                <div class="invite-project-by">
+                    Được mời bởi <strong>@Model.InvitedByUser?.Name</strong> ·
+                    @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                </div>
+            </div>
+
+            <div class="invite-actions">
+                <form asp-controller="Invite" asp-action="Accept" asp-route-id="@Model.Id" method="post" style="flex:1">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn-accept w-100">✓ Chấp nhận</button>
+                </form>
+                <form asp-controller="Invite" asp-action="Decline" asp-route-id="@Model.Id" method="post" style="flex:1">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn-decline w-100">✕ Từ chối</button>
+                </form>
+            </div>
+        </div>
+    }
+</div>

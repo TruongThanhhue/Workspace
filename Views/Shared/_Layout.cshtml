@@ -1,0 +1,318 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Tab title + favicon logo -->
+    <title>@ViewData["Title"] - Workspace</title>
+    <link rel="icon" type="image/jpeg" href="/img/Logo.jpg" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #f0f2f8;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .sidebar {
+            width: 255px;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+        }
+
+        .sidebar-brand {
+            padding: 22px 20px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+            .sidebar-brand img {
+                width: 38px;
+                height: 38px;
+                border-radius: 10px;
+                object-fit: cover;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            }
+
+        .brand-text {
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .brand-sub {
+            color: rgba(255,255,255,0.4);
+            font-size: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .nav-section-label {
+            padding: 16px 20px 6px;
+            color: rgba(255,255,255,0.3);
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+
+        .sidebar-nav {
+            padding: 8px 12px;
+            flex: 1;
+        }
+
+        .nav-item {
+            margin-bottom: 2px;
+        }
+
+            .nav-item a {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 14px;
+                color: rgba(255,255,255,0.6);
+                text-decoration: none;
+                font-size: 14px;
+                border-radius: 10px;
+                transition: all 0.2s;
+            }
+
+                .nav-item a i {
+                    font-size: 17px;
+                    width: 22px;
+                    text-align: center;
+                    flex-shrink: 0;
+                }
+
+                .nav-item a:hover {
+                    background: rgba(255,255,255,0.08);
+                    color: rgba(255,255,255,0.9);
+                }
+
+                .nav-item a.active {
+                    background: linear-gradient(135deg, #0f3460, #533483);
+                    color: white;
+                    box-shadow: 0 4px 12px rgba(15,52,96,0.4);
+                }
+
+        .sidebar-bottom {
+            padding: 16px 12px;
+            border-top: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .user-card {
+            background: rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #0f3460, #533483);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .user-name {
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .user-role {
+            color: rgba(255,255,255,0.45);
+            font-size: 11px;
+        }
+
+            .user-role.manager {
+                color: #ffd700;
+            }
+
+        .btn-logout {
+            width: 100%;
+            padding: 9px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.6);
+            border-radius: 10px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+            .btn-logout:hover {
+                background: rgba(220,53,69,0.2);
+                border-color: rgba(220,53,69,0.3);
+                color: #ff6b6b;
+            }
+
+        .main-content {
+            margin-left: 255px;
+            padding: 30px;
+            min-height: 100vh;
+        }
+
+        @@media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <img src="/img/Logo.jpg" alt="Logo" />
+            <div>
+                <div class="brand-text">Workspace</div>
+                <div class="brand-sub">Management</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Menu</div>
+            <ul class="list-unstyled mb-0">
+                <li class="nav-item">
+                    <a href="/Home/Index" class="@(ViewData["Title"]?.ToString() == "Dashboard" ? "active" : "")">
+                        <i class="bi bi-house-door-fill"></i> Trang chủ
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/Project/Index" class="@(ViewData["Title"]?.ToString()?.Contains("Dự án") == true ? "active" : "")">
+                        <i class="bi bi-folder2-open"></i> Quản lý dự án
+                    </a>
+                </li>
+                <li class="nav-item">
+                    @if (Context.Session.GetString("UserRole") == "Manager")
+                    {
+                        <a href="/Task/ManageTask" class="@(ViewData["Title"]?.ToString()?.Contains("Nhiệm vụ") == true ? "active" : "")">
+                            <i class="bi bi-check2-square"></i> Quản lý nhiệm vụ
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="/Task/Index" class="@(ViewData["Title"]?.ToString()?.Contains("Nhiệm vụ") == true ? "active" : "")">
+                            <i class="bi bi-check2-square"></i> Nhiệm vụ
+                        </a>
+                    }
+                </li>
+                <li class="nav-item">
+                    <a href="/Timeline/Index" class="@(ViewData["Title"]?.ToString()?.Contains("Timeline") == true ? "active" : "")">
+                        <i class="bi bi-calendar3"></i> Timeline
+                    </a>
+                </li>
+            </ul>
+            <div class="nav-section-label" style="margin-top:8px;">Khác</div>
+            <ul class="list-unstyled mb-0">
+                <li class="nav-item">
+                    <a href="/Notification/Index" class="@(ViewData["Title"]?.ToString()?.Contains("Thông báo") == true ? "active" : "")">
+                        <i class="bi bi-bell"></i> Thông báo
+                        @{
+                            var _uid = Context.Session.GetInt32("UserId");
+                            if (_uid != null)
+                            {
+                                var _db = Context.RequestServices.GetService<test.Data.AppDbContext>();
+                                var _unread = _db?.Notifications.Count(n => n.UserId == _uid && !n.IsRead) ?? 0;
+                                if (_unread > 0)
+                                {
+                                    <span class="badge bg-danger rounded-pill ms-1" style="font-size:10px">@_unread</span>
+                                }
+                            }
+                        }
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="user-card">
+                <div class="user-avatar">
+                    @(Context.Session.GetString("UserName")?.Substring(0, 1).ToUpper() ?? "U")
+                </div>
+                <div style="overflow:hidden">
+                    <div class="user-name text-truncate">@Context.Session.GetString("UserName")</div>
+                    <div class="user-role @(Context.Session.GetString("UserRole") == "Manager" ? "manager" : "")">
+                        @(Context.Session.GetString("UserRole") == "Manager" ? "👑 Manager" : "👤 Member")
+                    </div>
+                </div>
+            </div>
+            <form asp-controller="Account" asp-action="Logout" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn-logout">
+                    <i class="bi bi-box-arrow-left"></i> Đăng xuất
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="main-content">
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show mb-3 shadow-sm" role="alert">
+                <i class="bi bi-exclamation-circle me-2"></i>@TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["Success"] != null)
+        {
+            <div id="successAlert" class="alert alert-success alert-dismissible fade show mb-3 shadow-sm" role="alert">
+                <i class="bi bi-check-circle me-2"></i>@TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @RenderBody()
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const sa = document.getElementById('successAlert');
+        if (sa) {
+            setTimeout(() => {
+                sa.style.transition = 'opacity 0.6s';
+                sa.style.opacity = '0';
+                setTimeout(() => sa.remove(), 600);
+            }, 5000);
+        }
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

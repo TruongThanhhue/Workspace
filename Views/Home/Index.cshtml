@@ -1,0 +1,436 @@
+﻿@model test.Models.HomeViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    bool isManager = ViewBag.IsManager == true;
+    var userName = Context.Session.GetString("UserName") ?? "";
+    var hour = DateTime.Now.Hour;
+    var greeting = hour < 12 ? "Chào buổi sáng" : hour < 18 ? "Chào buổi chiều" : "Chào buổi tối";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<style>
+    .db-wrap {
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    /* Header */
+    .db-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        margin-bottom: 28px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .db-greeting {
+        font-size: 13px;
+        color: #94a3b8;
+        font-weight: 500;
+        margin-bottom: 4px;
+        letter-spacing: 0.2px;
+    }
+
+    .db-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #0f172a;
+        letter-spacing: -0.4px;
+    }
+
+    .db-date {
+        font-size: 12px;
+        color: #94a3b8;
+        font-weight: 500;
+    }
+
+    /* Stat cards */
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 20px;
+        transition: box-shadow .2s, transform .2s;
+        cursor: default;
+    }
+
+        .stat-card:hover {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transform: translateY(-2px);
+        }
+
+    .stat-card-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
+    }
+
+    .stat-icon-box {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+    }
+
+    .stat-trend {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 20px;
+    }
+
+    .stat-num {
+        font-size: 30px;
+        font-weight: 700;
+        color: #0f172a;
+        letter-spacing: -1px;
+        line-height: 1;
+        margin-bottom: 4px;
+    }
+
+    .stat-lbl {
+        font-size: 12px;
+        color: #94a3b8;
+        font-weight: 500;
+    }
+
+    /* Section cards */
+    .section-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 20px 14px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .section-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #0f172a;
+        letter-spacing: -0.1px;
+    }
+
+    .section-link {
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+        text-decoration: none;
+        padding: 5px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        transition: all .15s;
+    }
+
+        .section-link:hover {
+            background: #f8fafc;
+            color: #0f172a;
+            border-color: #cbd5e1;
+        }
+
+    /* Project row */
+    .project-row {
+        padding: 14px 20px;
+        border-bottom: 1px solid #f8fafc;
+        transition: background .15s;
+        cursor: pointer;
+    }
+
+        .project-row:last-child {
+            border-bottom: none;
+        }
+
+        .project-row:hover {
+            background: #fafafa;
+        }
+
+    .project-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: #0f172a;
+        margin-bottom: 6px;
+    }
+
+    .project-meta {
+        font-size: 11px;
+        color: #94a3b8;
+        margin-bottom: 8px;
+    }
+
+    .progress-bar-wrap {
+        height: 5px;
+        background: #f1f5f9;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .progress-bar-fill {
+        height: 100%;
+        border-radius: 10px;
+        background: #0f172a;
+        transition: width .4s ease;
+    }
+
+    /* Task row */
+    .task-row {
+        display: flex;
+        align-items: center;
+        padding: 13px 20px;
+        border-bottom: 1px solid #f8fafc;
+        transition: background .15s;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+    }
+
+        .task-row:last-child {
+            border-bottom: none;
+        }
+
+        .task-row:hover {
+            background: #fafafa;
+        }
+
+    .task-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        margin-right: 12px;
+    }
+
+    .task-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: #0f172a;
+        margin-bottom: 2px;
+    }
+
+    .task-meta {
+        font-size: 11px;
+        color: #94a3b8;
+    }
+
+    .task-badge {
+        margin-left: auto;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 20px;
+        flex-shrink: 0;
+    }
+
+    /* Empty state */
+    .empty-state {
+        padding: 40px 20px;
+        text-align: center;
+        color: #cbd5e1;
+        font-size: 13px;
+    }
+
+        .empty-state i {
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+    @@media (max-width: 768px) {
+        .stat-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+
+<div class="db-wrap">
+    <!-- Header -->
+    <div class="db-header">
+        <div>
+            <div class="db-greeting">@greeting, @userName</div>
+            <div class="db-title">
+                @if (isManager)
+                {
+                    <span>Trang chủ</span>
+                }
+                else
+                {
+
+                    <span>Công việc của tôi</span>
+                }
+            </div>
+        </div>
+        <div class="db-date">
+            @DateTime.Now.ToString("dddd, dd/MM/yyyy")
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="stat-card-top">
+                <div class="stat-icon-box" style="background:#f0f9ff">
+                    <i class="fa-solid fa-folder" style="color:#0ea5e9"></i>
+                </div>
+                <span class="stat-trend" style="background:#f0f9ff;color:#0ea5e9">Dự án</span>
+            </div>
+            <div class="stat-num">@Model.TotalProjects</div>
+            <div class="stat-lbl">Tổng dự án</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-card-top">
+                <div class="stat-icon-box" style="background:#f0fdf4">
+                    <i class="fa-solid fa-list-check" style="color:#22c55e"></i>
+                </div>
+                <span class="stat-trend" style="background:#f0fdf4;color:#16a34a">Nhiệm vụ</span>
+            </div>
+            <div class="stat-num">@Model.TotalTasks</div>
+            <div class="stat-lbl">Tổng nhiệm vụ</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-card-top">
+                <div class="stat-icon-box" style="background:#fef2f2">
+                    <i class="fa-solid fa-triangle-exclamation" style="color:#ef4444"></i>
+                </div>
+                <span class="stat-trend" style="background:#fef2f2;color:#dc2626">Cần xử lý</span>
+            </div>
+            <div class="stat-num" style="color:@(Model.OverdueTasks > 0 ? "#dc2626" : "#0f172a")">@Model.OverdueTasks</div>
+            <div class="stat-lbl">Quá hạn</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-card-top">
+                <div class="stat-icon-box" style="background:#fffbeb">
+                    <i class="fa-solid fa-clock" style="color:#f59e0b"></i>
+                </div>
+                <span class="stat-trend" style="background:#fffbeb;color:#d97706">Sắp đến</span>
+            </div>
+            <div class="stat-num" style="color:@(Model.UpcomingTasks > 0 ? "#d97706" : "#0f172a")">@Model.UpcomingTasks</div>
+            <div class="stat-lbl">Sắp đến hạn</div>
+        </div>
+    </div>
+
+    <!-- Bottom grid -->
+    <div class="row g-4">
+        <!-- Projects -->
+        <div class="col-12 col-lg-5">
+            <div class="section-card">
+                <div class="section-header">
+                    <span class="section-title">Dự án gần đây</span>
+                    <a href="/Project/Index" class="section-link">Xem tất cả</a>
+                </div>
+                @if (!Model.RecentProjects.Any())
+                {
+                    <div class="empty-state">
+                        <i class="fa-regular fa-folder-open"></i>
+                        Chưa có dự án nào
+                    </div>
+                }
+                else
+                {
+                    @foreach (var project in Model.RecentProjects)
+                    {
+                        var total = project.Tasks?.Count ?? 0;
+                        var done = project.Tasks?.Count(t => t.Status == "Done") ?? 0;
+                        var progress = total > 0 ? (int)((double)done / total * 100) : 0;
+                        <div class="project-row" onclick="window.location='/Project/Details/@project.Id'">
+                            <div class="project-name">@project.Name</div>
+                            <div class="project-meta">@done / @total nhiệm vụ hoàn thành</div>
+                            <div class="progress-bar-wrap">
+                                <div class="progress-bar-fill" style="width:@progress%"></div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+
+        <!-- Tasks -->
+        <div class="col-12 col-lg-7">
+            <div class="section-card">
+                <div class="section-header">
+                    <span class="section-title">Nhiệm vụ gần đây</span>
+                    @if (isManager)
+                    {
+                        <a href="/Task/ManageTask" class="section-link">Xem tất cả</a>
+                    }
+                    else
+                    {
+                        <a href="/Task/Index" class="section-link">Xem tất cả</a>
+                    }
+                </div>
+                @if (!Model.RecentTasks.Any())
+                {
+                    <div class="empty-state">
+                        <i class="fa-regular fa-clipboard"></i>
+                        Chưa có nhiệm vụ nào
+                    </div>
+                }
+                else
+                {
+                    @foreach (var task in Model.RecentTasks)
+                    {
+                        var dotColor = task.Status switch
+                        {
+                            "Done" => "#22c55e",
+                            "Overdue" => "#ef4444",
+                            "InProgress" => "#3b82f6",
+                            _ => "#cbd5e1"
+                        };
+                        var badgeBg = task.Status switch
+                        {
+                            "Done" => "#f0fdf4",
+                            "Overdue" => "#fef2f2",
+                            "InProgress" => "#eff6ff",
+                            _ => "#f8fafc"
+                        };
+                        var badgeColor = task.Status switch
+                        {
+                            "Done" => "#16a34a",
+                            "Overdue" => "#dc2626",
+                            "InProgress" => "#1d4ed8",
+                            _ => "#94a3b8"
+                        };
+                        var badgeLabel = task.Status switch
+                        {
+                            "Done" => "Hoàn thành",
+                            "Overdue" => "Quá hạn",
+                            "InProgress" => "Đang làm",
+                            _ => ""
+                        };
+                        <a href="/Task/Details/@task.Id" class="task-row">
+                            <div class="task-dot" style="background:@dotColor"></div>
+                            <div class="flex-grow-1">
+                                <div class="task-name">@task.Title</div>
+                                <div class="task-meta">@task.Project?.Name · Hạn: @task.EndDate.ToString("dd/MM/yyyy")</div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(badgeLabel))
+                            {
+                                <span class="task-badge" style="background:@badgeBg;color:@badgeColor">@badgeLabel</span>
+                            }
+                        </a>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>

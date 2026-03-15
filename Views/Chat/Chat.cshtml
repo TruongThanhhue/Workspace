@@ -1,0 +1,174 @@
+﻿@{
+    ViewData["Title"] = "Chat";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var project = (test.Models.Project)ViewBag.Project;
+    var messages = (List<test.Models.Message>)ViewBag.Messages;
+    var currentUserId = (int)ViewBag.CurrentUserId;
+    var chatType = (string)ViewBag.ChatType;
+    var receiverId = ViewBag.ReceiverId as int?;
+    var receiverName = ViewBag.ReceiverName as string;
+    var members = project.Members.ToList();
+    var isManager = project.ManagerId == currentUserId;
+}
+
+<div class="d-flex gap-3" style="height:calc(100vh - 140px)">
+
+    <!-- Sidebar danh sách chat -->
+    <div class="card border-0 shadow-sm flex-shrink-0" style="width:260px;border-radius:14px;overflow:hidden">
+        <div class="card-body p-0 d-flex flex-column h-100">
+            <div class="p-3 border-bottom">
+                <div class="fw-bold small text-muted text-uppercase">💬 @project.Name</div>
+            </div>
+
+            <div class="overflow-auto flex-grow-1">
+                <!-- Group chat -->
+                <a href="/Chat/Group/@project.Id"
+                   class="d-flex align-items-center gap-2 px-3 py-2 text-decoration-none @(chatType == "group" ? "bg-primary bg-opacity-10" : "")">
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width:36px;height:36px;font-size:14px">
+                        <i class="fa-solid fa-users" style="font-size:13px"></i>
+                    </div>
+                    <div>
+                        <div class="fw-semibold small text-dark">Nhóm dự án</div>
+                        <div class="text-muted" style="font-size:11px">Tất cả thành viên</div>
+                    </div>
+                </a>
+
+                <div class="px-3 py-1">
+                    <small class="text-muted text-uppercase" style="font-size:10px">Tin nhắn riêng</small>
+                </div>
+
+                <!-- Manager (nếu current user không phải manager) -->
+                @if (!isManager)
+                {
+                    <a href="/Chat/Private/@project.Id?receiverId=@project.ManagerId"
+                       class="d-flex align-items-center gap-2 px-3 py-2 text-decoration-none @(chatType == "private" && receiverId == project.ManagerId ? "bg-primary bg-opacity-10" : "")">
+                        <div class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                             style="width:36px;height:36px;font-size:14px">
+                            @project.Manager.Name[0].ToString().ToUpper()
+                        </div>
+                        <div>
+                            <div class="fw-semibold small text-dark">@project.Manager.Name</div>
+                            <div class="text-muted" style="font-size:11px">Manager</div>
+                        </div>
+                    </a>
+                }
+
+                <!-- Các thành viên khác -->
+                @foreach (var member in members.Where(m => m.UserId != currentUserId))
+                {
+                    <a href="/Chat/Private/@project.Id?receiverId=@member.UserId"
+                       class="d-flex align-items-center gap-2 px-3 py-2 text-decoration-none @(chatType == "private" && receiverId == member.UserId ? "bg-primary bg-opacity-10" : "")">
+                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                             style="width:36px;height:36px;font-size:14px">
+                            @member.User.Name[0].ToString().ToUpper()
+                        </div>
+                        <div>
+                            <div class="fw-semibold small text-dark">@member.User.Name</div>
+                            <div class="text-muted" style="font-size:11px">Thành viên</div>
+                        </div>
+                    </a>
+                }
+            </div>
+
+            <div class="p-2 border-top">
+                <a href="/Project/Details/@project.Id" class="btn btn-sm btn-outline-secondary w-100">
+                    <i class="fa-solid fa-arrow-left me-1"></i> Về dự án
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Khu vực chat -->
+    <div class="card border-0 shadow-sm flex-grow-1 d-flex flex-column" style="border-radius:14px;overflow:hidden">
+        <!-- Header -->
+        <div class="px-4 py-3 border-bottom d-flex align-items-center gap-2">
+            @if (chatType == "group")
+            {
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                     style="width:38px;height:38px">
+                    <i class="fa-solid fa-users" style="font-size:14px"></i>
+                </div>
+                <div>
+                    <div class="fw-bold">Nhóm dự án</div>
+                    <div class="text-muted small">@(members.Count + 1) thành viên</div>
+                </div>
+            }
+            else
+            {
+                <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
+                     style="width:38px;height:38px">
+                    @receiverName?[0].ToString().ToUpper()
+                </div>
+                <div>
+                    <div class="fw-bold">@receiverName</div>
+                    <div class="text-muted small">Tin nhắn riêng</div>
+                </div>
+            }
+        </div>
+
+        <!-- Messages -->
+        <div class="flex-grow-1 overflow-auto p-4" id="messageBox"
+             style="background:#f8f9fa">
+            @if (!messages.Any())
+            {
+                <div class="text-center text-muted py-5">
+                    <i class="fa-solid fa-comment-slash fa-2x mb-2 d-block"></i>
+                    Chưa có tin nhắn nào
+                </div>
+            }
+            else
+            {
+                @foreach (var msg in messages)
+                {
+                    var isMine = msg.SenderId == currentUserId;
+                    <div class="d-flex @(isMine ? "justify-content-end" : "justify-content-start") mb-3">
+                        @if (!isMine)
+                        {
+                            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center flex-shrink-0 me-2"
+                                 style="width:32px;height:32px;font-size:12px;align-self:flex-end">
+                                @msg.Sender.Name[0].ToString().ToUpper()
+                            </div>
+                        }
+                        <div style="max-width:65%">
+                            @if (!isMine)
+                            {
+                                <div class="text-muted mb-1" style="font-size:11px">@msg.Sender.Name</div>
+                            }
+                            <div class="px-3 py-2 rounded-3 @(isMine ? "bg-primary text-white" : "bg-white border")"
+                                 style="font-size:14px;word-break:break-word">
+                                @msg.Content
+                            </div>
+                            <div class="text-muted mt-1 @(isMine ? "text-end" : "")" style="font-size:10px">
+                                @msg.SentAt.ToString("HH:mm dd/MM")
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <!-- Input -->
+        <div class="p-3 border-top bg-white">
+            <form asp-controller="Chat" asp-action="Send" method="post"
+                  class="d-flex gap-2">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="projectId" value="@project.Id" />
+                <input type="hidden" name="receiverId" value="@receiverId" />
+                <input type="text" name="content" class="form-control"
+                       placeholder="Nhập tin nhắn..." autocomplete="off" />
+                <button type="submit" class="btn btn-primary px-3">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto scroll xuống cuối
+        const box = document.getElementById('messageBox');
+        if (box) box.scrollTop = box.scrollHeight;
+    </script>
+}

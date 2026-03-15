@@ -1,0 +1,204 @@
+﻿@model List<test.Models.Notification>
+@{
+    ViewData["Title"] = "Thông báo";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var unreadCount = Model.Count(n => !n.IsRead);
+}
+
+<style>
+    .notif-wrap {
+        font-family: 'DM Sans', 'Segoe UI', sans-serif;
+        max-width: 700px;
+    }
+
+    .notif-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .notif-title-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .notif-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0f172a;
+        letter-spacing: -0.3px;
+        margin: 0;
+    }
+
+    .notif-new-badge {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 20px;
+        background: #0f172a;
+        color: #fff;
+    }
+
+    .notif-hint {
+        font-size: 11px;
+        color: #cbd5e1;
+        font-weight: 500;
+    }
+
+    .notif-list {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .notif-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 15px 20px;
+        border-bottom: 1px solid #f8fafc;
+        text-decoration: none;
+        color: inherit;
+        transition: background .15s;
+    }
+
+        .notif-item:last-child {
+            border-bottom: none;
+        }
+
+        .notif-item:hover {
+            background: #fafafa;
+        }
+
+        .notif-item.unread {
+            background: #f8faff;
+        }
+
+            .notif-item.unread:hover {
+                background: #f0f5ff;
+            }
+
+    .notif-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 1px;
+    }
+
+        .notif-icon.read {
+            background: #f1f5f9;
+        }
+
+        .notif-icon.unread {
+            background: #dbeafe;
+        }
+
+    .notif-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .notif-text {
+        font-size: 13px;
+        line-height: 1.5;
+        color: #64748b;
+        font-weight: 400;
+    }
+
+        .notif-text.unread {
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+    .notif-time {
+        font-size: 11px;
+        color: #94a3b8;
+        font-weight: 500;
+        margin-top: 4px;
+    }
+
+    .notif-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #3b82f6;
+        flex-shrink: 0;
+        margin-top: 5px;
+    }
+
+    .notif-empty {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 60px 20px;
+        text-align: center;
+        color: #94a3b8;
+    }
+
+        .notif-empty i {
+            font-size: 28px;
+            margin-bottom: 12px;
+            display: block;
+            opacity: .3;
+        }
+
+        .notif-empty p {
+            font-size: 13px;
+        }
+</style>
+
+<div class="notif-wrap">
+    <div class="notif-header">
+        <div class="notif-title-row">
+            <span class="notif-title">Thông báo</span>
+            @if (unreadCount > 0)
+            {
+                <span class="notif-new-badge">@unreadCount mới</span>
+            }
+        </div>
+        @if (unreadCount > 0)
+        {
+            <span class="notif-hint">Tự động đánh dấu đã đọc khi truy cập</span>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="notif-empty">
+            <i class="fa-regular fa-bell-slash"></i>
+            <p>Chưa có thông báo nào</p>
+        </div>
+    }
+    else
+    {
+        <div class="notif-list">
+            @foreach (var n in Model)
+            {
+                <a href="@(n.Url ?? "/Notification/Index")"
+                   class="notif-item @(n.IsRead ? "" : "unread")">
+                    <div class="notif-icon @(n.IsRead ? "read" : "unread")">
+                        <i class="fa-solid fa-bell"
+                           style="font-size:14px;color:@(n.IsRead ? "#94a3b8" : "#3b82f6")"></i>
+                    </div>
+                    <div class="notif-body">
+                        <div class="notif-text @(n.IsRead ? "" : "unread")">@n.Content</div>
+                        <div class="notif-time">@n.CreatedAt.ToString("HH:mm · dd/MM/yyyy")</div>
+                    </div>
+                    @if (!n.IsRead)
+                    {
+                        <div class="notif-dot"></div>
+                    }
+                </a>
+            }
+        </div>
+    }
+</div>

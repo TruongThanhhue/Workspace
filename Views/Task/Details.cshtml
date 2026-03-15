@@ -1,0 +1,251 @@
+﻿@model test.Models.TaskItem
+@{
+    ViewData["Title"] = "Chi tiết nhiệm vụ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    bool isManager = ViewBag.IsManager == true;
+    int currentUserId = ViewBag.CurrentUserId ?? 0;
+    var isAssigned = Model.AssignedTo == currentUserId;
+    var mySubmission = Model.Submissions.FirstOrDefault(s => s.UserId == currentUserId);
+    var latestSubmission = Model.Submissions.OrderByDescending(s => s.SubmittedAt).FirstOrDefault();
+    bool hasPendingSubmission = latestSubmission != null && latestSubmission.Status == "Pending";
+
+    var (badgeClass, statusLabel) = Model.Status switch
+    {
+        "Done" => ("bg-success", "Hoàn thành"),
+        "InProgress" => ("bg-primary", "Đang làm"),
+        "Overdue" => ("bg-danger", "Quá hạn"),
+        _ => ("", "")
+    };
+    var priorityLabel = Model.Priority switch
+    {
+        "High" => "Cao",
+        "Medium" => "Trung bình",
+        _ => "Thấp"
+    };
+    var priorityColor = Model.Priority switch
+    {
+        "High" => "#dc3545",
+        "Medium" => "#fd7e14",
+        _ => "#6c757d"
+    };
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show py-2 mb-3">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Header -->
+<div class="d-flex align-items-center gap-3 mb-4">
+    <a href="/Task/Index?projectId=@Model.ProjectId" class="btn btn-sm btn-outline-secondary rounded-circle"
+       style="width:36px;height:36px;display:flex;align-items:center;justify-content:center">
+        <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    <div>
+        <h5 class="fw-bold mb-0">@Model.Title</h5>
+        <span class="text-muted small">@Model.Project?.Name</span>
+    </div>
+    <span class="badge @badgeClass ms-auto">@statusLabel</span>
+</div>
+
+<div class="row g-4">
+    <!-- LEFT: Task info -->
+    <div class="col-12 col-lg-5">
+        <div class="card border-0 shadow-sm h-100" style="border-radius:16px">
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-muted text-uppercase mb-3" style="font-size:11px;letter-spacing:1px">
+                    Thông tin nhiệm vụ
+                </h6>
+
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <p class="text-dark mb-4" style="line-height:1.6">@Model.Description</p>
+                    <hr class="my-3" />
+                }
+
+                <div class="d-flex flex-column gap-3 small">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-muted"><i class="fa-solid fa-user me-2"></i>Người thực hiện</span>
+                        <span class="fw-semibold">@(Model.AssignedUser?.Name ?? "Chưa giao")</span>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-muted"><i class="fa-solid fa-flag me-2"></i>Ưu tiên</span>
+                        <span class="fw-semibold" style="color:@priorityColor">@priorityLabel</span>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-muted"><i class="fa-solid fa-calendar-plus me-2"></i>Bắt đầu</span>
+                        <span>@Model.StartDate.ToString("dd/MM/yyyy")</span>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-muted"><i class="fa-solid fa-calendar-xmark me-2"></i>Deadline</span>
+                        <span class="@(Model.EndDate < DateTime.Now && Model.Status != "Done" ? "text-danger fw-bold" : "fw-semibold")">
+                            @Model.EndDate.ToString("dd/MM/yyyy")
+                        </span>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-muted"><i class="fa-solid fa-folder me-2"></i>Dự án</span>
+                        <a href="/Project/Details/@Model.ProjectId" class="text-decoration-none fw-semibold">
+                            @Model.Project?.Name
+                        </a>
+                    </div>
+                </div>
+
+                @if (isManager)
+                {
+                    <hr class="mt-4" />
+                    <a href="/Task/Edit/@Model.Id" class="btn btn-outline-secondary btn-sm w-100">
+                        <i class="fa-solid fa-pen me-1"></i> Chỉnh sửa nhiệm vụ
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: Submit / Evaluate -->
+    <div class="col-12 col-lg-7">
+
+        <!-- Member: nộp bài -->
+        @if (isAssigned && !isManager && Model.Status != "Done")
+        {
+            <div class="card border-0 shadow-sm" style="border-radius:16px">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-1">
+                        <i class="fa-solid fa-upload me-2 text-primary"></i>Nộp nhiệm vụ
+                    </h6>
+                    <p class="text-muted small mb-4">Tải file, dán link hoặc để lại ghi chú cho manager</p>
+
+                    @if (mySubmission != null)
+                    {
+                        var subBadge = mySubmission.Status switch
+                        {
+                            "Approved" => "success",
+                            "Rejected" => "danger",
+                            _ => "warning"
+                        };
+                        var subLabel = mySubmission.Status switch
+                        {
+                            "Approved" => "✅ Đã được duyệt",
+                            "Rejected" => "❌ Bị từ chối — hãy nộp lại",
+                            _ => "⏳ Đang chờ duyệt"
+                        };
+                        <div class="alert alert-@subBadge py-2 small mb-3">@subLabel</div>
+                    }
+
+                    <form asp-controller="Submission" asp-action="Submit" method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="taskId" value="@Model.Id" />
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">📁 File đính kèm</label>
+                            <input type="file" name="file" class="form-control form-control-sm" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">🔗 Link (GitHub, Drive...)</label>
+                            <input type="text" name="linkUrl" class="form-control form-control-sm"
+                                   placeholder="https://..." value="@mySubmission?.LinkUrl" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">📝 Ghi chú</label>
+                            <textarea name="note" class="form-control form-control-sm" rows="4"
+                                  placeholder="Mô tả những gì bạn đã làm...">@mySubmission?.Note</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fa-solid fa-paper-plane me-2"></i>
+                            @(mySubmission == null ? "Nộp nhiệm vụ" : "Nộp lại")
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+
+        @if (isAssigned && !isManager && Model.Status == "Done")
+        {
+            <div class="card border-0 shadow-sm text-center" style="border-radius:16px">
+                <div class="card-body p-5">
+                    <div class="mb-3" style="font-size:48px">✅</div>
+                    <h6 class="fw-bold">Nhiệm vụ đã hoàn thành!</h6>
+                    <p class="text-muted small mb-0">Manager đã duyệt bài nộp của bạn.</p>
+                </div>
+            </div>
+        }
+
+        <!-- Manager: duyệt bài nộp (chỉ hiện khi có bài Pending) -->
+        @if (isManager && hasPendingSubmission)
+        {
+            <div class="card border-0 shadow-sm" style="border-radius:16px;border-left:4px solid #ffc107!important">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h6 class="fw-bold mb-0">
+                            <i class="fa-solid fa-clipboard-check me-2 text-warning"></i>Duyệt bài nộp
+                        </h6>
+                        <span class="badge bg-warning text-dark">Chờ duyệt</span>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2 mb-3 p-2 bg-light rounded">
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                             style="width:32px;height:32px;font-size:12px">
+                            @(latestSubmission!.User?.Name?[0].ToString().ToUpper() ?? "?")
+                        </div>
+                        <div class="small">
+                            <div class="fw-semibold">@latestSubmission.User?.Name</div>
+                            <div class="text-muted">Nộp lúc @latestSubmission.SubmittedAt.ToString("HH:mm — dd/MM/yyyy")</div>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(latestSubmission.Note))
+                    {
+                        <div class="mb-3 p-3 rounded small" style="background:#f8f9fa;border-left:3px solid #dee2e6">
+                            <div class="text-muted mb-1 fw-semibold">Ghi chú:</div>
+                            @latestSubmission.Note
+                        </div>
+                    }
+
+                    <div class="d-flex gap-2 mb-3">
+                        @if (!string.IsNullOrEmpty(latestSubmission.LinkUrl))
+                        {
+                            <a href="@latestSubmission.LinkUrl" target="_blank" class="btn btn-outline-primary btn-sm flex-grow-1">
+                                <i class="fa-solid fa-link me-1"></i> Xem link
+                            </a>
+                        }
+                        @if (!string.IsNullOrEmpty(latestSubmission.FileUrl))
+                        {
+                            <a href="@latestSubmission.FileUrl" target="_blank" class="btn btn-outline-secondary btn-sm flex-grow-1">
+                                <i class="fa-solid fa-file me-1"></i> Tải file
+                            </a>
+                        }
+                    </div>
+
+                    <form asp-controller="Submission" asp-action="Evaluate" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@latestSubmission.Id" />
+                        <div class="mb-3">
+                            <textarea name="feedback" class="form-control form-control-sm" rows="2"
+                                  placeholder="Nhận xét cho thành viên (tùy chọn)..."></textarea>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" name="status" value="Approved" class="btn btn-success flex-grow-1">
+                                <i class="fa-solid fa-check me-1"></i> Duyệt
+                            </button>
+                            <button type="submit" name="status" value="Rejected" class="btn btn-danger flex-grow-1">
+                                <i class="fa-solid fa-xmark me-1"></i> Từ chối
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+
+        @if (isManager && !hasPendingSubmission)
+        {
+            <div class="card border-0 shadow-sm text-center" style="border-radius:16px">
+                <div class="card-body p-5 text-muted">
+                    <i class="fa-solid fa-inbox fa-2x mb-3 d-block opacity-50"></i>
+                    <div class="small">Chưa có bài nộp nào cần duyệt</div>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>

@@ -1,0 +1,62 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+<style >
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+.left-sidebar {
+    width: 250px;
+    background: #1f1f1f;
+    color: white;
+}
+
+    .left-sidebar ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .left-sidebar li {
+        padding: 12px 20px;
+    }
+
+        .left-sidebar li a {
+            color: white;
+            text-decoration: none;
+            display: block;
+        }
+
+        .left-sidebar li:hover {
+            background: #333;
+        }
+
+.sidebar-nav {
+    margin-top: 20px;
+}
+
+main {
+    background: #f5f6fa;
+}
+
+</style >

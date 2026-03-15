@@ -1,0 +1,354 @@
+﻿@model List<test.Models.Project>
+@{
+    ViewData["Title"] = "Quản lý dự án";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var isManager = Context.Session.GetString("UserRole") == "Manager";
+}
+
+<style>
+    .pj-wrap {
+        font-family: 'DM Sans', 'Segoe UI', sans-serif;
+    }
+
+    .pj-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .pj-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0f172a;
+        letter-spacing: -0.3px;
+        margin: 0;
+    }
+
+    .pj-sub {
+        font-size: 13px;
+        color: #94a3b8;
+        margin-top: 3px;
+    }
+
+    .btn-create {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: #0f172a;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 9px 18px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background .15s, transform .1s;
+    }
+
+        .btn-create:hover {
+            background: #1e293b;
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+    .pj-grid {
+        display: grid;
+        grid-template-columns: repeat(3,1fr);
+        gap: 16px;
+    }
+
+    @@media(max-width:1100px) {
+        .pj-grid {
+            grid-template-columns: repeat(2,1fr);
+        }
+    }
+
+    @@media(max-width:640px) {
+        .pj-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .pj-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        transition: box-shadow .2s, transform .2s;
+    }
+
+        .pj-card:hover {
+            box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+            transform: translateY(-2px);
+        }
+
+    .pj-card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 14px;
+    }
+
+    .pj-thumb {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        object-fit: cover;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .pj-status {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 20px;
+    }
+
+    .s-active {
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .s-done {
+        background: #f0fdf4;
+        color: #16a34a;
+    }
+
+    .s-overdue {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    .pj-name {
+        font-size: 14px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 4px;
+    }
+
+    .pj-desc {
+        font-size: 12px;
+        color: #94a3b8;
+        line-height: 1.5;
+        margin-bottom: 14px;
+        min-height: 34px;
+    }
+
+    .pj-prog-lbl {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: #94a3b8;
+        font-weight: 500;
+        margin-bottom: 5px;
+    }
+
+    .pj-prog-track {
+        height: 5px;
+        background: #f1f5f9;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 14px;
+    }
+
+    .pj-prog-fill {
+        height: 100%;
+        border-radius: 10px;
+        background: #0f172a;
+    }
+
+        .pj-prog-fill.green {
+            background: #22c55e;
+        }
+
+    .pj-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        color: #94a3b8;
+        font-weight: 500;
+        margin-bottom: 16px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .pj-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: auto;
+    }
+
+    .pj-btn {
+        flex: 1;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 7px 10px;
+        border-radius: 8px;
+        border: 1.5px solid #e2e8f0;
+        background: #fff;
+        color: #475569;
+        text-decoration: none;
+        text-align: center;
+        transition: all .15s;
+        cursor: pointer;
+        font-family: inherit;
+    }
+
+        .pj-btn:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: #0f172a;
+        }
+
+    .pj-btn-icon {
+        font-size: 12px;
+        font-weight: 600;
+        padding: 7px 10px;
+        border-radius: 8px;
+        border: 1.5px solid #e2e8f0;
+        background: #fff;
+        color: #475569;
+        text-decoration: none;
+        transition: all .15s;
+        cursor: pointer;
+        font-family: inherit;
+    }
+
+        .pj-btn-icon:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            color: #0f172a;
+        }
+
+        .pj-btn-icon.del:hover {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #dc2626;
+        }
+
+    .pj-empty {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 60px 20px;
+        text-align: center;
+        color: #94a3b8;
+    }
+
+        .pj-empty i {
+            font-size: 30px;
+            margin-bottom: 12px;
+            display: block;
+            opacity: .35;
+        }
+
+        .pj-empty p {
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+</style>
+
+<div class="pj-wrap">
+    <div class="pj-header">
+        <div>
+            <div class="pj-title">Quản lý dự án</div>
+            <div class="pj-sub">Tổng cộng @Model.Count dự án</div>
+        </div>
+        @if (isManager)
+        {
+            <a href="/Project/Create" class="btn btn-dark px-4">
+                <i class="fa fa-plus-circle"></i>
+                <span style="font-weight:bold; font-size:18px;">Tạo dự án</span>
+            </a>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="pj-empty">
+            <i class="fa-regular fa-folder-open"></i>
+            <p>Chưa có dự án nào</p>
+            @if (isManager)
+            {
+                <a href="/Project/Create" class="btn-create">
+                    <i class="fa-solid fa-plus" style="font-size:11px"></i> Tạo dự án đầu tiên
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="pj-grid">
+            @foreach (var project in Model)
+            {
+                var total = project.Tasks?.Count ?? 0;
+                var done = project.Tasks?.Count(t => t.Status == "Done") ?? 0;
+                var progress = total > 0 ? (int)((double)done / total * 100) : 0;
+                var isOverdue = project.EndDate < DateTime.Today && progress < 100;
+                var sc = isOverdue ? "s-overdue" : progress == 100 ? "s-done" : "s-active";
+                var sl = isOverdue ? "Quá hạn" : progress == 100 ? "Hoàn thành" : "Đang thực hiện";
+
+                <div class="pj-card">
+                    <div class="pj-card-top">
+                        @if (!string.IsNullOrEmpty(project.ImageUrl))
+                        {
+                            <img src="@project.ImageUrl" class="pj-thumb" />
+                        }
+                        else
+                        {
+                            <div class="pj-thumb">
+                                <i class="fa-solid fa-folder" style="color:#cbd5e1;font-size:18px"></i>
+                            </div>
+                        }
+                        <span class="pj-status @sc">@sl</span>
+                    </div>
+
+                    <div class="pj-name">@project.Name</div>
+                    <div class="pj-desc">
+                        @(project.Description?.Length > 80 ? project.Description[..80] + "..." : project.Description ?? "Không có mô tả")
+                    </div>
+
+                    <div class="pj-prog-lbl">
+                        <span>Tiến độ</span><span>@done / @total task</span>
+                    </div>
+                    <div class="pj-prog-track">
+                        <div class="pj-prog-fill @(progress == 100 ? "green" : "")" style="width:@progress%"></div>
+                    </div>
+
+                    <div class="pj-meta">
+                        <span><i class="fa-solid fa-user me-1"></i>@(project.Manager?.Name ?? "N/A")</span>
+                        <span><i class="fa-solid fa-calendar-days me-1"></i>@project.EndDate.ToString("dd/MM/yyyy")</span>
+                    </div>
+
+                    <div class="pj-actions">
+                        <a href="/Project/Details/@project.Id" class="pj-btn">
+                            <i class="fa-solid fa-eye me-1"></i>Chi tiết
+                        </a>
+                        @if (isManager && project.ManagerId == Context.Session.GetInt32("UserId"))
+                        {
+                            <a href="/Project/Edit/@project.Id" class="pj-btn-icon">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                            <form asp-action="Delete" asp-route-id="@project.Id" method="post"
+                                  onsubmit="return confirm('Xóa dự án này?')" style="margin:0">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="pj-btn-icon del">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
